@@ -3,7 +3,6 @@
  * This software is licensed under a Creative Commons (CC BY-NC-SA) license.
  * This software is authored by Chris Malnick (2023, 2024).
  */
-
 #include <ftd3xx/ftd3xx.h>
 
 #include <SFML/Audio.hpp>
@@ -71,7 +70,7 @@ public:
 	static inline bool connected = false;
 	static inline bool disconnecting = false;
 
-	static inline bool auto_connect = false;
+	static inline bool auto_connect = true;
 
 	static inline bool connect() {
 		if (Capture::connected) {
@@ -491,7 +490,7 @@ public:
 						break;
 
 					case sf::Keyboard::Up:
-						this->m_scale = this->m_scale < 4.0 ? static_cast<int>(this->m_scale / 0.5) * 0.5 + 0.5 : 4.5;
+						this->m_scale = this->m_scale < 8.0 ? static_cast<int>(this->m_scale / 0.5) * 0.5 + 0.5 : 8.5;
 						break;
 
 					case sf::Keyboard::Left:
@@ -554,11 +553,11 @@ public:
 						Video::brightness = 100;
 						break;
 
-					case sf::Keyboard::Tab:
+					/*case sf::Keyboard::Tab:
 						Video::split ^= true;
 						Video::swap();
 
-						break;
+						break;*/
 
 					case sf::Keyboard::B:
 						this->m_out_tex.setSmooth(this->m_blur ^= true);
@@ -676,6 +675,7 @@ public:
 
 		void open() {
 			this->m_win.create(sf::VideoMode(this->m_width * this->m_scale, this->m_height * this->m_scale), this->title());
+			//this->m_win.setPosition(sf::Vector2i(100,100));
 			this->m_win.setView(this->m_view);
 
 			Video::vsync ? this->m_win.setVerticalSyncEnabled(true) : this->m_win.setFramerateLimit(FRAMERATE_LIMIT);
@@ -957,8 +957,8 @@ void save(std::string path, std::string name) {
 
 int main(int argc, char **argv) {
 	for (int i = 1; i < argc; ++i) {
-		if (strcmp(argv[i], "--auto") == 0) {
-			Capture::auto_connect = true;
+		if (strcmp(argv[i], "--not-auto") == 0) {
+			Capture::auto_connect = false;
 			continue;
 		}
 
