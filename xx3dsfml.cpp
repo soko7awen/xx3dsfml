@@ -8,6 +8,7 @@
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
 
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -70,6 +71,8 @@ public:
 	static inline bool connected = false;
 	static inline bool disconnecting = false;
 
+	static inline bool output_blanked = true;
+
 	static inline bool auto_connect = true;
 
 	static inline bool connect() {
@@ -79,6 +82,8 @@ public:
 
 		if (FT_Create(const_cast<char*>(PRODUCT_1), FT_OPEN_BY_DESCRIPTION, &Capture::handle) && FT_Create(const_cast<char*>(PRODUCT_2), FT_OPEN_BY_DESCRIPTION, &Capture::handle)) {
 			printf("[%s] Create failed.\n", NAME);
+			system("xset dpms force off");
+			Capture::output_blanked = true;
 			return false;
 		}
 
@@ -809,6 +814,26 @@ private:
 	static inline bool load(UCHAR *p_buf, ULONG *p_read) {
 		if (*p_read < FRAME_SIZE_RGB) {
 			return false;
+		}
+
+		bool all_black = true;
+		for (size_t i = 0; i < FRAME_SIZE_RGB; ++i) {
+			if (p_buf[i] != 0x00) {
+				all_black = false;
+				break;
+			}
+		}
+
+		if (all_black && !Capture::output_blanked) {
+			system("xset dpms force off");
+			Capture::output_blanked = true;
+		}
+		else if (!all_black && Capture::output_blanked) {
+			system("xset dpms force on");
+			Capture::output_blanked = false;
+			Video::screens[Video::Screen::Type::TOP].reset();
+			Video::screens[Video::Screen::Type::BOT].reset();
+			Video::screens[Video::Screen::Type::JOINT].reset();
 		}
 
 		Video::map(p_buf, Video::buf);
